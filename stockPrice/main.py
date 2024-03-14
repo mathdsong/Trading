@@ -56,3 +56,56 @@ def csv_to_close_price(csv_filepath, field_names) :
     return close_price_pivot_table
 
 print(csv_to_close_price(stock_price_path, ['ticker', 'date', 'open', 'high', 'low', 'close', 'volume', 'adj_close', 'adj_volume']))
+
+def pivot_ohlc_price(keyWord, csv_filepath, field_names) :
+    # read the csv file into the dataframe:
+    df = pd.read_csv(csv_filepath, names=field_names)
+    df['date'] = pd.to_datetime(df['date'])
+    # generate the close-price pivot table:
+    pivot_table = df.pivot(index='date', columns='ticker', values=keyWord)
+    return pivot_table
+
+def days_to_weeks(open_prices, high_prices, low_prices, close_prices):
+    """Converts daily OHLC prices to weekly OHLC prices.
+
+    Parameters
+    ----------
+    open_prices : DataFrame
+        Daily open prices for each ticker and date
+    high_prices : DataFrame
+        Daily high prices for each ticker and date
+    low_prices : DataFrame
+        Daily low prices for each ticker and date
+    close_prices : DataFrame
+        Daily close prices for each ticker and date
+
+    Returns
+    -------
+    open_prices_weekly : DataFrame
+        Weekly open prices for each ticker and date
+    high_prices_weekly : DataFrame
+        Weekly high prices for each ticker and date
+    low_prices_weekly : DataFrame
+        Weekly low prices for each ticker and date
+    close_prices_weekly : DataFrame
+        Weekly close prices for each ticker and date
+    """
+
+    open_prices_weekly = open_prices.resample('W').first()
+    high_prices_weekly = high_prices.resample('W').max()
+    low_prices_weekly = low_prices.resample('W').min()
+    close_prices_weekly = close_prices.resample('W').last()
+
+    return open_prices_weekly, high_prices_weekly, low_prices_weekly, close_prices_weekly
+
+ohlc_list = ['open', 'high', 'low', 'close']
+pd_list = []
+for i in ohlc_list:
+    pivot_table = pivot_ohlc_price(i, stock_price_path, ['ticker', 'date', 'open', 'high', 'low', 'close', 'volume', 'adj_close', 'adj_volume'])
+    pd_list.append(pivot_table)
+
+# print(pd_list[0].resample('W').first())
+# print(pd_list[1].resample('W').max())
+# print(pd_list[2].resample('W').min())
+# print(pd_list[3].resample('W').last())
+print(days_to_weeks(pd_list[0], pd_list[1], pd_list[2], pd_list[3]))
